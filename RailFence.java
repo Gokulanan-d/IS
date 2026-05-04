@@ -1,0 +1,104 @@
+
+import java.util.Scanner;
+import java.util.Arrays;
+
+public class RailFence {
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Enter text: ");
+        // We remove spaces so the zigzag pattern is clean and secure
+        String pt = sc.nextLine().toLowerCase().replaceAll("\\s+", "");
+
+        System.out.print("Enter number of rails (key): ");
+        int key = sc.nextInt();
+
+        if (key < 2) {
+            System.out.println("Error: You need at least 2 rails for a fence!");
+            return;
+        }
+
+        String ct = encrypt(pt, key);
+        System.out.println("Encryption : " + ct);
+
+        String dt = decrypt(ct, key);
+        System.out.println("Decryption : " + dt);
+
+        sc.close();
+    }
+
+    // --- ENCRYPTION ---
+    private static String encrypt(String text, int rails) {
+        // Create an array of StringBuilders, one for each rail
+        StringBuilder[] fence = new StringBuilder[rails];
+        for (int i = 0; i < rails; i++) {
+            fence[i] = new StringBuilder();
+        }
+
+        int row = 0;
+        int direction = 1; // 1 means moving down, -1 means moving up
+
+        // Walk the zigzag path and drop letters into their rails
+        for (char c : text.toCharArray()) {
+            fence[row].append(c);
+            row += direction;
+
+            // If we hit the top or bottom rail, reverse direction!
+            if (row == 0 || row == rails - 1) {
+                direction *= -1;
+            }
+        }
+
+        // Read the fence row by row to get the final ciphertext
+        StringBuilder ciphertext = new StringBuilder();
+        for (StringBuilder rail : fence) {
+            ciphertext.append(rail);
+        }
+
+        return ciphertext.toString();
+    }
+
+    // --- DECRYPTION ---
+    private static String decrypt(String text, int rails) {
+        // Create a 2D grid filled with empty spaces
+        char[][] grid = new char[rails][text.length()];
+        for (char[] r : grid) Arrays.fill(r, '\n');
+
+        int row = 0;
+        int direction = 1;
+
+        // STEP 1: Walk the zigzag path and mark placeholders ('*')
+        for (int i = 0; i < text.length(); i++) {
+            grid[row][i] = '*';
+            row += direction;
+            if (row == 0 || row == rails - 1) {
+                direction *= -1;
+            }
+        }
+
+        // STEP 2: Fill the placeholders row by row with our ciphertext
+        int index = 0;
+        for (int r = 0; r < rails; r++) {
+            for (int c = 0; c < text.length(); c++) {
+                if (grid[r][c] == '*' && index < text.length()) {
+                    grid[r][c] = text.charAt(index++);
+                }
+            }
+        }
+
+        // STEP 3: Walk the zigzag path one last time to read the original message!
+        StringBuilder plaintext = new StringBuilder();
+        row = 0;
+        direction = 1;
+        for (int i = 0; i < text.length(); i++) {
+            plaintext.append(grid[row][i]);
+            row += direction;
+            if (row == 0 || row == rails - 1) {
+                direction *= -1;
+            }
+        }
+
+        return plaintext.toString();
+    }
+}
